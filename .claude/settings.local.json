@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\REPOSITORIES\\\\FitbitGarminWeightSync\" /a)",
+      "WebFetch(domain:dev.fitbit.com)",
+      "WebFetch(domain:github.com)",
+      "WebSearch"
+    ]
+  }
+}

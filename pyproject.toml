@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fitbit-garmin-sync"
+version = "0.1.0"
+description = "Sync weight data from Fitbit to Garmin Connect"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "fitbit>=0.3.1",
+    "garminconnect>=0.2.25",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+fitbit-garmin-sync = "fitbit_garmin_sync.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
