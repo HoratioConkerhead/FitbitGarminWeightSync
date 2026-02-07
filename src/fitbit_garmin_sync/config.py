@@ -6,6 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 
+# All persistent data (tokens, sync state) is stored here
 DATA_DIR = Path.home() / ".fitbit_garmin_sync"
 
 

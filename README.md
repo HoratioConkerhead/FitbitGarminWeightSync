@@ -39,7 +39,13 @@ This installs the `fitbit-garmin-sync` command into your virtual environment.
 
 1. Go to <https://dev.fitbit.com/apps/new> and log in with your Fitbit account.
 2. Register a new app with these settings:
-   - **Application Name**: anything (e.g. "Weight Sync")
+   - **Application Name**: anything (e.g. "Weight Sync to Garmin")
+   - **Description**: Syncs weight from Fitbit to Garmin
+   - **Application Website URL**: https://github.com/HoratioConkerhead/FitbitGarminWeightSync
+   - **Organization**: none
+   - **Organization Website URL**: https://github.com/HoratioConkerhead
+   - **Terms of Service URL**: https://github.com/HoratioConkerhead
+   - **Privacy Policy URL**: https://github.com/HoratioConkerhead
    - **OAuth 2.0 Application Type**: **Personal**
    - **Redirect URL**: `http://127.0.0.1:8080/`
    - **Default Access Type**: **Read Only**
@@ -47,7 +53,7 @@ This installs the `fitbit-garmin-sync` command into your virtual environment.
 
 ### Garmin Connect Credentials
 
-You need your Garmin Connect login email and password.
+You need your Garmin Connect login email and password. If your account has MFA enabled, you'll be prompted to enter the code from your email on first login.
 
 ### Configure the `.env` File
 
@@ -93,7 +99,7 @@ Before syncing for real, do a dry run to verify your Fitbit credentials work:
 fitbit-garmin-sync --dry-run --days 7
 ```
 
-On the **first run**, a browser window will open asking you to authorize the app with Fitbit. After authorizing, tokens are saved to `~/.fitbit_garmin_sync/fitbit_tokens.json` and reused on subsequent runs.
+On the **first run**, a browser window will open asking you to authorize the app with Fitbit. After authorizing, tokens are saved and reused on subsequent runs.
 
 Once the dry run looks good:
 
@@ -110,6 +116,13 @@ fitbit-garmin-sync --start-date 2025-01-01 --end-date 2025-01-31
 # Clear sync state:
 fitbit-garmin-sync --reset
 ```
+
+## How It Works
+
+- Weight data is always fetched in **metric (kg)** regardless of your Fitbit locale settings.
+- Entries are tracked by Fitbit log ID to avoid duplicate uploads. Sync state is stored in `~/.fitbit_garmin_sync/state.json`.
+- Auth tokens for both services are saved in `~/.fitbit_garmin_sync/` so you only need to authenticate once.
+- The Fitbit API is rate-limited to **150 requests/hour**. Large syncs (e.g. `--days 3650`) fetch data in 30-day chunks to stay well within this limit.
 
 ## Scheduling (cron)
 

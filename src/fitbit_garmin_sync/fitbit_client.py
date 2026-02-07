@@ -48,6 +48,10 @@ class _OAuthCallbackHandler(BaseHTTPRequestHandler):
 
 
 def _do_oauth_flow(client_id: str, client_secret: str) -> fitbit.Fitbit:
+    """Run the browser-based OAuth2 flow for first-time Fitbit authorization.
+
+    Starts a local HTTP server on port 8080 to receive the OAuth callback.
+    """
     redirect_uri = "http://127.0.0.1:8080/"
     scopes = ["weight"]
 
@@ -99,6 +103,7 @@ def _do_oauth_flow(client_id: str, client_secret: str) -> fitbit.Fitbit:
 
 
 def get_fitbit_client(client_id: str, client_secret: str) -> fitbit.Fitbit:
+    """Return an authenticated Fitbit client, using saved tokens or running OAuth."""
     tokens = _load_tokens()
     if tokens:
         return fitbit.Fitbit(
@@ -143,6 +148,7 @@ def fetch_weight_entries(
         try:
             data = client.get_bodyweight(base_date=current, end_date=chunk_end)
         except KeyError as e:
+            # python-fitbit bug: on 429 it reads Retry-After header which may not exist
             if "retry-after" in str(e).lower():
                 raise SystemExit(
                     "Fitbit API rate limit exceeded (150 requests/hour). "

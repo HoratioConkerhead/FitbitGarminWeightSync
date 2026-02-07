@@ -11,8 +11,8 @@ from .config import ensure_data_dir
 from .models import WeightEntry
 
 MAX_RETRIES = 3
-RETRY_DELAY = 10
-UPLOAD_DELAY = 1
+RETRY_DELAY = 10  # seconds, multiplied by attempt number
+UPLOAD_DELAY = 1  # seconds between uploads to avoid hammering the API
 
 TOKENSTORE_DIR = "garmin_tokens"
 
