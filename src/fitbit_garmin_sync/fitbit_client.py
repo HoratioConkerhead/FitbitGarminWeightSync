@@ -112,27 +112,43 @@ def get_fitbit_client(client_id: str, client_secret: str) -> fitbit.Fitbit:
     return _do_oauth_flow(client_id, client_secret)
 
 
+def _parse_weight_records(records: list[dict]) -> list[WeightEntry]:
+    entries = []
+    for record in records:
+        timestamp = datetime.strptime(
+            f"{record['date']} {record.get('time', '00:00:00')}",
+            "%Y-%m-%d %H:%M:%S",
+        )
+        entries.append(
+            WeightEntry(
+                log_id=str(record["logId"]),
+                timestamp=timestamp,
+                weight_kg=record["weight"],
+                body_fat_pct=record.get("fat"),
+                bmi=record.get("bmi"),
+            )
+        )
+    return entries
+
+
 def fetch_weight_entries(
     client: fitbit.Fitbit, start_date: date, end_date: date
 ) -> list[WeightEntry]:
     entries = []
     current = start_date
+    # Fitbit API limits date ranges to 31 days, so fetch in 30-day chunks
+    chunk_size = timedelta(days=30)
     while current <= end_date:
-        # Fitbit API: get weight logs for a single date
-        data = client.get_bodyweight(base_date=current, period="1d")
-        for record in data.get("weight", []):
-            timestamp = datetime.strptime(
-                f"{record['date']} {record.get('time', '00:00:00')}",
-                "%Y-%m-%d %H:%M:%S",
-            )
-            entries.append(
-                WeightEntry(
-                    log_id=str(record["logId"]),
-                    timestamp=timestamp,
-                    weight_kg=record["weight"],
-                    body_fat_pct=record.get("fat"),
-                    bmi=record.get("bmi"),
+        chunk_end = min(current + chunk_size, end_date)
+        try:
+            data = client.get_bodyweight(base_date=current, end_date=chunk_end)
+        except Exception as e:
+            error_msg = str(e)
+            if "429" in error_msg or "Too Many Requests" in error_msg:
+                raise SystemExit(
+                    f"Fitbit API rate limit exceeded. Try again later.\n{error_msg}"
                 )
-            )
-        current += timedelta(days=1)
+            raise SystemExit(f"Fitbit API error: {error_msg}")
+        entries.extend(_parse_weight_records(data.get("weight", [])))
+        current = chunk_end + timedelta(days=1)
     return entries
