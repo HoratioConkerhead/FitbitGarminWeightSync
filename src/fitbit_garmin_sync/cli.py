@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import argparse
-from datetime import date, timedelta
+import sys
+from datetime import date, datetime, timedelta
 
-from .config import load_config
+from .config import ensure_data_dir, load_config
 from .fitbit_client import get_fitbit_client
 from .garmin_client import get_garmin_client
 from .state import reset_state
@@ -39,11 +40,28 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Clear sync state and exit.",
     )
+    parser.add_argument(
+        "--log",
+        action="store_true",
+        help="Append output to sync.log in the data directory (useful for scheduled tasks).",
+    )
     return parser.parse_args()
+
+
+def _setup_logging() -> None:
+    """Redirect stdout and stderr to sync.log in the data directory."""
+    log_path = ensure_data_dir() / "sync.log"
+    fh = open(log_path, "a")
+    fh.write(f"\n--- {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+    sys.stdout = fh
+    sys.stderr = fh
 
 
 def main() -> None:
     args = parse_args()
+
+    if args.log:
+        _setup_logging()
 
     if args.reset:
         reset_state()

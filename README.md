@@ -120,15 +120,52 @@ fitbit-garmin-sync --reset
 ## How It Works
 
 - Weight data is always fetched in **metric (kg)** regardless of your Fitbit locale settings.
-- Entries are tracked by Fitbit log ID to avoid duplicate uploads. Sync state is stored in `~/.fitbit_garmin_sync/state.json`.
-- Auth tokens for both services are saved in `~/.fitbit_garmin_sync/` so you only need to authenticate once.
+- Entries are tracked by Fitbit log ID to avoid duplicate uploads.
+- All persistent data is stored in `~/.fitbit_garmin_sync/` (i.e. `%HOMEPATH%\.fitbit_garmin_sync` on Windows):
+  - `fitbit_tokens.json` — Fitbit OAuth tokens
+  - `garmin_tokens/` — Garmin OAuth tokens
+  - `state.json` — sync state (last sync date, synced log IDs)
+  - `sync.log` — output log when using `--log`
 - The Fitbit API is rate-limited to **150 requests/hour**. Large syncs (e.g. `--days 3650`) fetch data in 30-day chunks to stay well within this limit.
 
-## Scheduling (cron)
+## Scheduling
+
+Use `--log` to capture output when running unattended. The log is written to `~/.fitbit_garmin_sync/sync.log`.
+
+### Windows (Task Scheduler)
+
+Create a daily scheduled task from PowerShell:
+
+```powershell
+$action = New-ScheduledTaskAction `
+    -Execute "C:\REPOSITORIES\FitbitGarminWeightSync\.venv\Scripts\fitbit-garmin-sync.exe" `
+    -Argument "--log"
+$trigger = New-ScheduledTaskTrigger -Daily -At 8am
+Register-ScheduledTask -TaskName "FitbitGarminSync" -Action $action -Trigger $trigger `
+    -Description "Sync weight data from Fitbit to Garmin Connect"
+```
+
+To verify, modify, or remove:
+
+```powershell
+# Check the task exists:
+Get-ScheduledTask -TaskName "FitbitGarminSync"
+
+# Run it immediately to test:
+Start-ScheduledTask -TaskName "FitbitGarminSync"
+
+# Check the log:
+Get-Content ~\.fitbit_garmin_sync\sync.log -Tail 20
+
+# Remove it:
+Unregister-ScheduledTask -TaskName "FitbitGarminSync"
+```
+
+### Linux/macOS (cron)
 
 ```cron
 # Run daily at 8am:
-0 8 * * * /path/to/venv/bin/fitbit-garmin-sync
+0 8 * * * /path/to/venv/bin/fitbit-garmin-sync --log
 ```
 
 ## Deactivate the Virtual Environment
