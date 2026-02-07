@@ -4,7 +4,11 @@
       "Bash(dir \"C:\\\\REPOSITORIES\\\\FitbitGarminWeightSync\" /a)",
       "WebFetch(domain:dev.fitbit.com)",
       "WebFetch(domain:github.com)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(\".venv/Scripts/python.exe\":*)",
+      "Bash(\".venv/Scripts/pip.exe\" show garminconnect garth)"
     ]
   }
 }

@@ -2,14 +2,41 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from garminconnect import Garmin
+from garminconnect import Garmin, GarminConnectAuthenticationError
+from garth.exc import GarthHTTPError
 
+from .config import ensure_data_dir
 from .models import WeightEntry
+
+TOKENSTORE_DIR = "garmin_tokens"
+
+
+def _tokenstore_path() -> str:
+    return str(ensure_data_dir() / TOKENSTORE_DIR)
 
 
 def get_garmin_client(email: str, password: str) -> Garmin:
-    client = Garmin(email, password)
+    tokenstore = _tokenstore_path()
+
+    # Try loading saved tokens first
+    try:
+        client = Garmin(email=email, password=password)
+        client.login(tokenstore)
+        print("Garmin login successful (using saved tokens).")
+        return client
+    except (FileNotFoundError, GarthHTTPError, GarminConnectAuthenticationError):
+        pass
+
+    # Fresh login with credentials (prompt_mfa handles MFA-enabled accounts)
+    def _prompt_mfa() -> str:
+        return input("Enter the MFA code sent to your email: ").strip()
+
+    client = Garmin(email=email, password=password, prompt_mfa=_prompt_mfa)
     client.login()
+
+    # Save tokens for future runs
+    client.garth.dump(tokenstore)
+    print("Garmin login successful. Tokens saved.")
     return client
 
 

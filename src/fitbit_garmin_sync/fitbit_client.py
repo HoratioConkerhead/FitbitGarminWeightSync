@@ -94,6 +94,7 @@ def _do_oauth_flow(client_id: str, client_secret: str) -> fitbit.Fitbit:
         access_token=token_dict["access_token"],
         refresh_token=token_dict["refresh_token"],
         refresh_cb=_save_tokens,
+        system=fitbit.Fitbit.METRIC,
     )
 
 
@@ -106,6 +107,7 @@ def get_fitbit_client(client_id: str, client_secret: str) -> fitbit.Fitbit:
             access_token=tokens["access_token"],
             refresh_token=tokens["refresh_token"],
             refresh_cb=_save_tokens,
+            system=fitbit.Fitbit.METRIC,
         )
     return _do_oauth_flow(client_id, client_secret)
 

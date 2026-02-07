@@ -56,7 +56,7 @@ def run_sync(
             synced_ids.add(entry.log_id)
             print(f"  Synced: {label}")
 
-    if not dry_run and use_state:
+    if not dry_run:
         save_state(today, list(synced_ids))
 
     action = "Would sync" if dry_run else "Synced"
