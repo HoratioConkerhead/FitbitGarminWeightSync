@@ -142,11 +142,19 @@ def fetch_weight_entries(
         chunk_end = min(current + chunk_size, end_date)
         try:
             data = client.get_bodyweight(base_date=current, end_date=chunk_end)
+        except KeyError as e:
+            if "retry-after" in str(e).lower():
+                raise SystemExit(
+                    "Fitbit API rate limit exceeded (150 requests/hour). "
+                    "Try again in an hour."
+                )
+            raise SystemExit(f"Fitbit API error: {e}")
         except Exception as e:
             error_msg = str(e)
             if "429" in error_msg or "Too Many Requests" in error_msg:
                 raise SystemExit(
-                    f"Fitbit API rate limit exceeded. Try again later.\n{error_msg}"
+                    "Fitbit API rate limit exceeded (150 requests/hour). "
+                    "Try again in an hour."
                 )
             raise SystemExit(f"Fitbit API error: {error_msg}")
         entries.extend(_parse_weight_records(data.get("weight", [])))

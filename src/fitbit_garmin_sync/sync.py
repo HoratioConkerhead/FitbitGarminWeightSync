@@ -44,8 +44,9 @@ def run_sync(
 
     print(f"Found {len(new_entries)} new entries to sync ({len(entries) - len(new_entries)} already synced).")
 
-    for entry in new_entries:
-        label = f"  {entry.timestamp.strftime('%Y-%m-%d %H:%M')} — {entry.weight_kg} kg"
+    synced_count = 0
+    for i, entry in enumerate(new_entries, 1):
+        label = f"{entry.timestamp.strftime('%Y-%m-%d %H:%M')} — {entry.weight_kg} kg"
         if entry.body_fat_pct is not None:
             label += f", {entry.body_fat_pct}% fat"
 
@@ -54,7 +55,11 @@ def run_sync(
         else:
             upload_weight_entry(garmin_client, entry)
             synced_ids.add(entry.log_id)
-            print(f"  Synced: {label}")
+            synced_count += 1
+            print(f"  [{i}/{len(new_entries)}] Synced: {label}")
+            # Save state periodically so progress survives crashes
+            if synced_count % 10 == 0:
+                save_state(today, list(synced_ids))
 
     if not dry_run:
         save_state(today, list(synced_ids))
