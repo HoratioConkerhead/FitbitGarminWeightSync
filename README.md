@@ -134,13 +134,15 @@ Use `--log` to capture output when running unattended. The log is written to `~/
 
 ### Windows (Task Scheduler)
 
-Create a daily scheduled task from PowerShell:
+Create an hourly scheduled task from PowerShell (Fitbit can take a while to sync after weighing, so running hourly ensures data is picked up promptly):
 
 ```powershell
 $action = New-ScheduledTaskAction `
     -Execute "C:\REPOSITORIES\FitbitGarminWeightSync\.venv\Scripts\fitbit-garmin-sync.exe" `
     -Argument "--log"
-$trigger = New-ScheduledTaskTrigger -Daily -At 8am
+$trigger = New-ScheduledTaskTrigger -Daily -At 00:00
+$trigger.Repetition.Interval = "PT1H"
+$trigger.Repetition.Duration = "P1D"
 Register-ScheduledTask -TaskName "FitbitGarminSync" -Action $action -Trigger $trigger `
     -Description "Sync weight data from Fitbit to Garmin Connect"
 ```
@@ -164,8 +166,8 @@ Unregister-ScheduledTask -TaskName "FitbitGarminSync"
 ### Linux/macOS (cron)
 
 ```cron
-# Run daily at 8am:
-0 8 * * * /path/to/venv/bin/fitbit-garmin-sync --log
+# Run every hour:
+0 * * * * /path/to/venv/bin/fitbit-garmin-sync --log
 ```
 
 ## Deactivate the Virtual Environment
